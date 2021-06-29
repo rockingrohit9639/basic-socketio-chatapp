@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App for MLH-INIT</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;500;600&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #4d426d;
+      }
+
+      #message-container {
+        width: 90%;
+        height: 70vh;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        margin-top: 1rem;
+        background-color: #5c4f82;
+        border-radius: 1rem;
+        padding: 2rem;
+      }
+
+      .user-message {
+        background-color: #4d426d;
+        width: fit-content;
+        max-width: 60%;
+        margin-bottom: 0.8rem;
+        padding: 1rem;
+        border-radius: 1rem;
+      }
+
+      .your-message {
+        background-color: #efa985;
+        width: fit-content;
+        max-width: 60%;
+        margin-bottom: 0.8rem;
+        padding: 1rem;
+        border-radius: 1rem;
+        float: right;
+      }
+
+      .user-message p {
+        color: #ffffffe0;
+        font-weight: 400;
+      }
+
+      .your-message p {
+        color: #ffffffe0;
+        font-weight: 400;
+      }
+
+      .right {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      #send-container {
+        margin-top: 2rem;
+        width: 80%;
+        display: flex;
+        background-color: #fff;
+        border-radius: 50px;
+        padding: 0.3rem;
+      }
+
+      #message-input {
+        width: 95%;
+        padding: 0.8rem;
+        outline: none;
+        border: none;
+        border-radius: 50px;
+      }
+
+      #message-input:active,
+      #message-input:focus {
+        outline: none;
+        border: none;
+      }
+
+      #send-button {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-right: 0.5rem;
+        border-radius: 50%;
+        border: none;
+        outline: none;
+        background-color: #3cc6b7;
+        color: #fff;
+        cursor: pointer;
+      }
+    </style>
+
+    <div id="message-container"></div>
+
+    <form action="" id="send-container">
+      <input
+        type="text"
+        id="message-input"
+        autocomplete="off"
+        placeholder="Message"
+      />
+      <button type="submit" id="send-button">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+
+    <script>
+      const socket = io();
+      const messageForm = document.querySelector("#send-container");
+      const messageInput = document.querySelector("#message-input");
+      const messageContainer = document.querySelector("#message-container");
+      const name = prompt("What is your name?");
+
+      appendUserMessage("You joined");
+      socket.emit("new-user", name);
+
+      socket.on("chat-message", (data) => {
+        appendUserMessage(`${data.name} : ${data.message}`);
+      });
+
+      socket.on("user-connect", (name) => {
+        appendUserMessage(`${name} joined the chat.`);
+      });
+
+      socket.on("user-disconnect", (name) => {
+        appendUserMessage(`${name} left the chat.`);
+      });
+
+      messageForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const message = messageInput.value;
+        appendYourMessage(`You : ${message}`);
+
+        socket.emit("send-chat-message", message);
+        messageInput.value = "";
+      });
+
+      function appendUserMessage(message) {
+        const messageElem = document.createElement("div");
+        const messageP = document.createElement("p");
+        messageP.innerText = message;
+
+        messageElem.classList.add("user-message");
+        messageElem.appendChild(messageP);
+
+        messageContainer.append(messageElem);
+      }
+
+      function appendYourMessage(message) {
+        const div1 = document.createElement("div");
+        div1.classList.add("right");
+        
+        const div2 = document.createElement("div");
+        div2.classList.add("your-message");
+
+        const messageP = document.createElement("p");
+        messageP.innerText = message;
+
+        div2.appendChild(messageP);
+
+        div1.appendChild(div2);
+
+        messageContainer.append(div1);
+      }
+    </script>
+  </body>
+</html>
